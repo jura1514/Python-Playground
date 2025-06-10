@@ -1,15 +1,15 @@
 from dotenv import load_dotenv
+
+from file_manager import write_json_file
+from models import Alert, TargetPriceCondition
+from scheduled_job import price_alert_job
 load_dotenv()
 
 import sys
 import time
-from monitor import get_price
-from notifier import send_telegram_message
 from enums import Symbol, Convert
-import os
+import schedule
 
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 if __name__ == "__main__":
     try:
@@ -25,27 +25,29 @@ if __name__ == "__main__":
         print("Invalid symbol or currency. Please use a valid option from enums.py.")
         sys.exit(1)
 
-    interval = 300  # 5 minutes
-
-    print(
-        f"Monitoring {symbol} price in {convert} every {interval // 60} minutes. Press Ctrl+C to stop."
+    alerts = []
+    alert = Alert(
+        target_price=10000.0,
+        condition=TargetPriceCondition.HIGHER.name,
+        symbol=symbol,
+        convert=convert,
     )
+    alerts.append(alert)
+
+    write_json_file([a.__dict__ for a in alerts])
+
+    schedule.every().day.at("09:00").do(price_alert_job)
+    schedule.every().day.at("18:00").do(price_alert_job)
+    schedule.every(1).seconds.do(price_alert_job)
+
+    print(f"Monitoring {symbol} price in {convert}.")
+    print("Scheduled jobs:")
+    print(schedule.get_jobs())
+    print("Press Ctrl+C to stop.")
+
     try:
         while True:
-            price = get_price(symbol, convert)
-            if price is not None:
-                priceText = f"Current {symbol} price: {price:.2f} in {convert}"
-                print(priceText)
-                TELEGRAM_BOT_TOKEN
-                TELEGRAM_CHAT_ID
-
-                send_telegram_message(
-                    TELEGRAM_BOT_TOKEN,
-                    TELEGRAM_CHAT_ID,
-                    priceText,
-                )
-            else:
-                print("Failed to retrieve the price.")
-            time.sleep(interval)
+            schedule.run_pending()
+            time.sleep(1)
     except KeyboardInterrupt:
         print("\nStopped monitoring.")

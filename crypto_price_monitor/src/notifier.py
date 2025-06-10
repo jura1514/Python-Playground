@@ -1,17 +1,38 @@
-import requests
+from models import Alert, TargetPriceCondition
+from monitor import get_price
+from telegram_api import send_telegram_message
+import os
+
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 
-def send_telegram_message(bot_token, chat_id, message):
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    payload = {"chat_id": chat_id, "text": message}
-    try:
-        response = requests.post(url, data=payload)
-        if response.ok is True:
-            print(f"Telegram response: {response.text}")
-            return response.ok
-        else:
-            print(f"Telegram response error: {response.text}")
-            return False
-    except Exception as e:
-        print(f"Failed to send Telegram message: {e}")
-        return False
+def send_alert(alert: Alert):
+    price = get_price(alert.symbol, alert.convert)
+    if price is not None:
+        priceText = f"Current {alert.symbol} price: {price:.2f} in {alert.convert}"
+        print(priceText)
+
+        if (
+            alert.condition == TargetPriceCondition.LOWER
+            and price <= alert.target_price
+        ):
+            send_telegram_message(
+                TELEGRAM_BOT_TOKEN,
+                TELEGRAM_CHAT_ID,
+                f"ALERT: {alert.symbol} price dropped to {price:.2f} {alert.convert} (≤ {alert.target_price:.2f})",
+            )
+            alert.is_notified = True
+        elif (
+            alert.condition == TargetPriceCondition.HIGHER
+            and price >= alert.target_price
+        ):
+            send_telegram_message(
+                TELEGRAM_BOT_TOKEN,
+                TELEGRAM_CHAT_ID,
+                f"ALERT: {alert.symbol} price rose to {price:.2f} {alert.convert} (≥ {alert.target_price:.2f})",
+            )
+            alert.is_notified = True
+
+    else:
+        print("Failed to retrieve the price.")
