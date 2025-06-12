@@ -1,6 +1,6 @@
 from enum import Enum
 from enums import Convert, Symbol
-
+from uuid import UUID
 
 class TargetPriceCondition(Enum):
     LOWER = 0
@@ -8,6 +8,7 @@ class TargetPriceCondition(Enum):
 
 
 class Alert:
+    id: UUID
     target_price: float
     condition: TargetPriceCondition
     symbol: Symbol
@@ -16,11 +17,13 @@ class Alert:
 
     def __init__(
         self,
+        id: UUID,
         target_price: float,
         condition: TargetPriceCondition,
         symbol: Symbol,
         convert: Convert,
     ):
+        self.id = id
         self.target_price = target_price
         self.condition = condition
         self.symbol = symbol
@@ -35,8 +38,9 @@ class Alert:
     @classmethod
     def from_dict(cls, data):
         return cls(
-            target_price=data["target_price"],
-            condition=TargetPriceCondition[data["condition"]],
-            symbol=Symbol[data["symbol"]],
-            convert=Convert[data["convert"]],
+            UUID(data["id"]),
+            data["target_price"],
+            TargetPriceCondition[data["condition"]],
+            Symbol[data["symbol"]],
+            Convert[data["convert"]],
         )

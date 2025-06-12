@@ -1,3 +1,4 @@
+import uuid
 from dotenv import load_dotenv
 
 from file_manager import write_json_file
@@ -27,6 +28,7 @@ if __name__ == "__main__":
 
     alerts = []
     alert = Alert(
+        id = uuid.uuid4(),
         target_price=10000.0,
         condition=TargetPriceCondition.HIGHER.name,
         symbol=symbol,

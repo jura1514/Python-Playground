@@ -1,8 +1,1 @@
-[
-    {
-        "target_price": 10000.0,
-        "condition": "HIGHER",
-        "symbol": "BTC",
-        "convert": "USD"
-    }
-]
+[]
