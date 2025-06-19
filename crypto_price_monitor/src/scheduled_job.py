@@ -1,31 +1,69 @@
-from file_manager import read_json_file, write_json_file
+from storage.file_manager import read_json_file, write_json_file
 from models import Alert
 from notifier import send_alert
 import os
 
+from storage.sql.db import SessionLocal
+from storage.sql.alert_db import AlertDB
+from storage.sql.queries import get_not_notified_alerts
+
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+USE_FILE_STORAGE = os.getenv("USE_FILE_STORAGE")
 
 
 def price_alert_job():
-    alerts_json = read_json_file()
-    if not alerts_json:
-        print("No alerts found.")
-        return
+    if USE_FILE_STORAGE.lower() == "true":
+        alerts_json = read_json_file()
+        if not alerts_json:
+            print("No alerts found.")
+            return
 
-    updated_alerts = []
-    for a in alerts_json:
-        print(a)
-        alert = Alert.from_dict(a)
-        if not alert.is_notified():
-            print(f"Processing alert: {alert.symbol} {alert.condition} {alert.target_price} {alert.convert}")
-            send_alert(alert)
-            if alert.is_notified():
-                print(f"Alert {alert.id} has been notified.")
-                continue
-        updated_alerts.append(alert)
-    
-    write_json_file(updated_alerts)
+        updated_alerts = []
+        for a in alerts_json:
+            print(a)
+            alert = Alert.from_dict(a)
+            if not alert.is_notified():
+                print(
+                    f"Processing alert: {alert.symbol} {alert.condition} {alert.target_price} {alert.convert}"
+                )
+                is_sent = send_alert(
+                    alert.symbol, alert.convert, alert.target_price, alert.condition
+                )
+                if is_sent:
+                    alert.set_notified()
+                    print(f"Alert {alert.id} has been notified.")
+                    continue
+            updated_alerts.append(alert)
+
+        write_json_file(updated_alerts)
+    else:
+        session = SessionLocal()
+        try:
+            alerts = get_not_notified_alerts(session)
+            print(f"Found {len(alerts)} alerts to process.")
+            if not alerts:
+                print("No alerts found.")
+                return
+
+            for alert in alerts:
+                print(
+                    f"Processing alert: {alert.symbol} {alert.condition} {alert.target_price} {alert.convert}"
+                )
+                is_sent = send_alert(
+                    alert.symbol, alert.convert, alert.target_price, alert.condition
+                )
+                if is_sent:
+                    alert.is_notified = True
+                    print(f"Alert {alert.id} has been notified.")
+                    continue
+
+            session.commit()
+        except Exception as e:
+            print(f"Error processing alerts: {e}")
+            session.rollback()
+        finally:
+            session.close()
+
     print("All alerts processed.")
-    print("Alerts file updated.")
     print("Scheduled job completed.")

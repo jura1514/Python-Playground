@@ -1,11 +1,43 @@
 import requests
 from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
 import os
+
+from enums import Convert, Symbol
+
 # import pprint
 
 API_KEY = os.getenv("API_KEY")
 
+
+def validate_input(symbol, convert):
+    # Validate types
+    if not isinstance(symbol, str) or not isinstance(convert, str):
+        print("Symbol and convert must be strings.")
+        return None
+
+    # Validate values against enums
+    if symbol not in Symbol.__members__:
+        print(
+            f"Invalid symbol: {symbol}. Must be one of: {list(Symbol.__members__.keys())}"
+        )
+        return None
+    if convert not in Convert.__members__:
+        print(
+            f"Invalid convert: {convert}. Must be one of: {list(Convert.__members__.keys())}"
+        )
+        return None
+
+
 def get_price(symbol="BTC", convert="USD"):
+    """
+    Fetches the current price of a cryptocurrency in a specified currency.
+
+    :param symbol: The cryptocurrency symbol to fetch the price for (default is 'BTC').
+    :param convert: The currency to convert the price into (default is 'USD').
+
+    :return: The current price of the cryptocurrency in the specified currency, or None if an error occurs.
+    """
+    validate_input(symbol, convert)
     url = "https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest"
     parameters = {"symbol": symbol, "convert": convert}
     headers = {"Accepts": "application/json", "X-CMC_PRO_API_KEY": API_KEY}

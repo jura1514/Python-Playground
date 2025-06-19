@@ -1,3 +1,4 @@
+from enums import Convert, Symbol
 from models import Alert, TargetPriceCondition
 from monitor import get_price
 from telegram_api import send_telegram_message
@@ -7,32 +8,39 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 
-def send_alert(alert: Alert):
-    price = get_price(alert.symbol.value, alert.convert.value)
+def send_alert(symbol: Symbol, convert: Convert, target_price, condition) -> bool:
+    """
+    Sends an alert if the current price of the symbol meets the target price condition.
+
+    :param symbol: The cryptocurrency symbol to monitor.
+    :param convert: The currency to convert the price into.
+    :param target_price: The target price to compare against.
+    :param condition: The condition to check (higher or lower than target price).
+
+    :return: True if the alert was sent, False otherwise.
+    """
+    price = get_price(symbol.value, convert.value)
     if price is not None:
-        priceText = f"Current {alert.symbol.value} price: {price:.2f} in {alert.convert.value}"
+        priceText = f"Current {symbol.value} price: {price:.2f} in {convert.value}"
         print(priceText)
 
-        if (
-            alert.condition == TargetPriceCondition.LOWER
-            and price <= alert.target_price
-        ):
+        if condition == TargetPriceCondition.LOWER and price <= target_price:
             send_telegram_message(
                 TELEGRAM_BOT_TOKEN,
                 TELEGRAM_CHAT_ID,
-                f"ALERT: {alert.symbol.value} price dropped to {price:.2f} {alert.convert.value} (≤ {alert.target_price:.2f})",
+                f"ALERT: {symbol.value} price dropped to {price:.2f} {convert.value} (≤ {target_price:.2f})",
             )
-            alert.set_notified()
-        elif (
-            alert.condition == TargetPriceCondition.HIGHER
-            and price >= alert.target_price
-        ):
+            return True
+        elif condition == TargetPriceCondition.HIGHER and price >= target_price:
             send_telegram_message(
                 TELEGRAM_BOT_TOKEN,
                 TELEGRAM_CHAT_ID,
-                f"ALERT: {alert.symbol} price rose to {price:.2f} {alert.convert} (≥ {alert.target_price:.2f})",
+                f"ALERT: {symbol.value} price rose to {price:.2f} {convert.value} (≥ {target_price:.2f})",
             )
-            alert.set_notified()
+            return True
+
+        return False
 
     else:
         print("Failed to retrieve the price.")
+        return False
