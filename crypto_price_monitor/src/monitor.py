@@ -1,3 +1,4 @@
+from cachetools import TTLCache
 import requests
 from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
 import os
@@ -8,6 +9,7 @@ from enums import Convert, Symbol
 
 API_KEY = os.getenv("API_KEY")
 
+cache = TTLCache(maxsize=10, ttl=15)
 
 def validate_input(symbol, convert):
     # Validate types
@@ -38,6 +40,12 @@ def get_price(symbol="BTC", convert="USD"):
     :return: The current price of the cryptocurrency in the specified currency, or None if an error occurs.
     """
     validate_input(symbol, convert)
+
+    cache_key = (symbol, convert)
+    if cache_key in cache:
+        print(f"Cache hit for {symbol} in {convert}. Returning cached price.")
+        return cache[cache_key]
+
     url = "https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest"
     parameters = {"symbol": symbol, "convert": convert}
     headers = {"Accepts": "application/json", "X-CMC_PRO_API_KEY": API_KEY}
@@ -47,6 +55,7 @@ def get_price(symbol="BTC", convert="USD"):
         data = response.json()
         # pprint.pprint(data)
         price = data["data"][symbol][0]["quote"][convert]["price"]
+        cache[cache_key] = price
         return price
     except (ConnectionError, Timeout, TooManyRedirects) as e:
         print(f"An error occurred: {e}")
