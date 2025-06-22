@@ -1,13 +1,13 @@
 from cachetools import TTLCache
 import requests
 from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
-import os
 
-from enums import Convert, Symbol
+from config import Config
+from models.enums import Convert, Symbol
 
 # import pprint
 
-API_KEY = os.getenv("API_KEY")
+API_KEY = Config.API_KEY
 
 cache = TTLCache(maxsize=10, ttl=15)
 

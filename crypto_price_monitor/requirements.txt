@@ -1,1 +1,9 @@
 requests
+fastapi
+sqlalchemy
+python-dotenv
+schedule
+cachetools
+sqlalchemy
+psycopg2
+apscheduler

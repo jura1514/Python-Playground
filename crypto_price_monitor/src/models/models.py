@@ -1,6 +1,7 @@
 from enum import Enum
-from enums import Convert, Symbol
+from models.enums import Convert, Symbol
 from uuid import UUID
+from pydantic import BaseModel
 
 class TargetPriceCondition(Enum):
     LOWER = 0
@@ -44,3 +45,17 @@ class Alert:
             Symbol[data["symbol"]],
             Convert[data["convert"]],
         )
+
+class AlertCreate(BaseModel):
+    target_price: float
+    condition: str
+    symbol: str
+    convert: str
+
+class AlertCreated(BaseModel):
+    id: str
+    target_price: float
+    condition: str
+    symbol: str
+    convert: str
+    is_notified: bool

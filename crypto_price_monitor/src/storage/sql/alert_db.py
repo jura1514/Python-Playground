@@ -2,7 +2,7 @@ from sqlalchemy import Boolean, Column, Float, Enum as SAEnum
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.ext.declarative import declarative_base
 import uuid
-from models import TargetPriceCondition, Symbol, Convert
+from models.models import TargetPriceCondition, Symbol, Convert
 
 Base = declarative_base()
 

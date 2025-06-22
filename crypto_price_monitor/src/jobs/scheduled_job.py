@@ -1,15 +1,14 @@
+from config import Config
 from storage.file_manager import read_json_file, write_json_file
-from models import Alert
-from notifier import send_alert
-import os
+from models.models import Alert
+from services.notifier import send_alert
 
 from storage.sql.db import SessionLocal
-from storage.sql.alert_db import AlertDB
 from storage.sql.queries import get_not_notified_alerts
 
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-USE_FILE_STORAGE = os.getenv("USE_FILE_STORAGE")
+TELEGRAM_BOT_TOKEN = Config.TELEGRAM_BOT_TOKEN
+TELEGRAM_CHAT_ID = Config.TELEGRAM_CHAT_ID
+USE_FILE_STORAGE = Config.USE_FILE_STORAGE
 
 
 def price_alert_job():
