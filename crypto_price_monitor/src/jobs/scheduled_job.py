@@ -4,7 +4,7 @@ from models.models import Alert
 from services.notifier import send_alert
 
 from storage.sql.db import SessionLocal
-from storage.sql.queries import get_not_notified_alerts
+from storage.sql.queries import get_alerts
 
 TELEGRAM_BOT_TOKEN = Config.TELEGRAM_BOT_TOKEN
 TELEGRAM_CHAT_ID = Config.TELEGRAM_CHAT_ID
@@ -39,7 +39,7 @@ def price_alert_job():
     else:
         session = SessionLocal()
         try:
-            alerts = get_not_notified_alerts(session)
+            alerts = get_alerts(session)
             print(f"Found {len(alerts)} alerts to process.")
             if not alerts:
                 print("No alerts found.")

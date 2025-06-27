@@ -59,3 +59,16 @@ class AlertCreated(BaseModel):
     symbol: str
     convert: str
     is_notified: bool
+
+class AlertUpdate(BaseModel):
+    target_price: float | None = None
+    symbol: str | None = None
+    convert: str | None = None
+
+class AlertItem(BaseModel):
+    id: str
+    target_price: float
+    condition: str
+    symbol: str
+    convert: str
+    is_notified: bool

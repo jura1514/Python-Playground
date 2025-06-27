@@ -6,7 +6,7 @@ from sqlalchemy import Engine
 from storage.sql.alert_db import AlertDB
 
 
-def get_not_notified_alerts(session: Session) -> List[AlertDB]:
+def get_alerts(session: Session, is_notified=False) -> List[AlertDB]:
     """
     Fetch all not notified alerts.
 
@@ -14,8 +14,4 @@ def get_not_notified_alerts(session: Session) -> List[AlertDB]:
 
     :return: List[AlertDB]
     """
-    return (
-        session.query(AlertDB)
-        .filter(AlertDB.is_notified == False)
-        .all()
-    )
+    return session.query(AlertDB).filter(AlertDB.is_notified == is_notified).all()
